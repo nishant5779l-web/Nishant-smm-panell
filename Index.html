@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NISHANT SMM PANEL</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #070b14;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #0c1220;
+      padding: 20px;
+      border-bottom: 1px solid #1677ff;
+      text-align: center;
+    }
+
+    header h1 {
+      color: #1684ff;
+      font-size: 25px;
+      letter-spacing: 1px;
+    }
+
+    header p {
+      color: #a8b5cc;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    main {
+      max-width: 850px;
+      margin: 25px auto;
+      padding: 15px;
+    }
+
+    .card {
+      background: #101827;
+      border: 1px solid #202e43;
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      color: #1684ff;
+      font-size: 20px;
+      margin-bottom: 17px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 13px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 15px;
+    }
+
+    input, select {
+      background: #080e19;
+      border: 1px solid #293952;
+      color: #fff;
+      outline: none;
+    }
+
+    button {
+      background: #0878ff;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #005bd1;
+    }
+
+    button.secondary {
+      background: #202d42;
+    }
+
+    .muted {
+      color: #9eacc2;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .service {
+      background: #0a1220;
+      padding: 15px;
+      border-radius: 9px;
+      border: 1px solid #25354c;
+      margin-bottom: 12px;
+    }
+
+    .service h3 {
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .price {
+      color: #39a1ff;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 5px 9px;
+      background: #27354a;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .message {
+      margin-top: 12px;
+      padding: 11px;
+      border-radius: 7px;
+      background: #17253a;
+      overflow-wrap: anywhere;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .danger {
+      color: #ff9c9c;
+    }
+
+    footer {
+      text-align: center;
+      color: #71819b;
+      padding: 25px 10px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>⚡ NISHANT SMM PANEL</h1>
+  <p>Your Social Media Marketing Dashboard</p>
+</header>
+
+<main>
+
+  <!-- LOGIN / SIGNUP -->
+  <section class="card" id="authCard">
+    <h2>Welcome 👋</h2>
+
+    <p class="muted">
+      Create your account or sign in to access your dashboard.
+    </p>
+
+    <input id="email" type="email" placeholder="Email address"
+           autocomplete="email">
+
+    <input id="password" type="password" placeholder="Password"
+           autocomplete="current-password">
+
+    <button onclick="signIn()">Sign In</button>
+    <button class="secondary" onclick="signUp()">Create Account</button>
+
+    <div id="authMessage" class="message hidden"></div>
+  </section>
+
+  <!-- CUSTOMER DASHBOARD -->
+  <section id="dashboard" class="hidden">
+
+    <div class="card">
+      <h2>My Dashboard</h2>
+      <p class="muted">Signed in as:</p>
+      <p id="userEmail" style="margin-top:8px;overflow-wrap:anywhere"></p>
+      <button class="secondary" onclick="signOut()">Sign Out</button>
+    </div>
+
+    <!-- SERVICES -->
+    <div class="card">
+      <h2>Available Services</h2>
+      <p class="muted">
+        Services will appear here when they are added to the database.
+      </p>
+      <div id="servicesList" style="margin-top:15px"></div>
+      <button class="secondary" onclick="loadServices()">
+        Refresh Services
+      </button>
+    </div>
+
+    <!-- ORDER -->
+    <div class="card">
+      <h2>Place an Order</h2>
+
+      <label class="muted" for="serviceSelect">Select service</label>
+      <select id="serviceSelect" onchange="calculatePrice()">
+        <option value="">Loading services...</option>
+      </select>
+
+      <label class="muted" for="targetUrl">Public post or profile URL</label>
+      <input id="targetUrl" type="url"
+             placeholder="https://www.instagram.com/..."
+             autocomplete="url">
+
+      <label class="muted" for="quantity">Quantity</label>
+      <input id="quantity" type="number" min="1" step="1"
+             placeholder="Enter quantity" oninput="calculatePrice()">
+
+      <p class="price" id="estimatedPrice">Estimated total: ₹0.00</p>
+
+      <button onclick="placeOrder()">Submit Order</button>
+      <div id="orderMessage" class="message hidden"></div>
+
+      <p class="muted" style="margin-top:12px">
+        Orders are requests only. They are not guaranteed to produce a
+        particular number of views, followers, or sales.
+      </p>
+    </div>
+
+    <!-- MANUAL PAYMENT -->
+    <div class="card">
+      <h2>💳 Manual UPI Payment</h2>
+
+      <p class="muted">
+        Pay using the UPI details supplied by the panel owner. After
+        paying, submit the exact amount and transaction reference.
+        Your request will remain pending until verified.
+      </p>
+
+      <input id="paymentAmount" type="number" min="1" step="0.01"
+             placeholder="Amount paid (₹)">
+
+      <input id="transactionRef" type="text"
+             placeholder="UPI transaction reference">
+
+      <button onclick="submitPayment()">Submit Payment Request</button>
+      <div id="paymentMessage" class="message hidden"></div>
+
+      <p class="muted" style="margin-top:12px">
+        Submitting a reference does not itself confirm payment or add
+        money to an account.
+      </p>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="card">
+      <h2>My Orders</h2>
+      <button class="secondary" onclick="loadOrders()">Refresh Orders</button>
+      <div id="ordersList" style="margin-top:15px"></div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="card">
+      <h2>My Payment Requests</h2>
+      <button class="secondary" onclick="loadPayments()">Refresh Payments</button>
+      <div id="paymentsList" style="margin-top:15px"></div>
+    </div>
+
+  </section>
+
+</main>
+
+<footer>
+  NISHANT SMM PANEL · Customer Dashboard
+</footer>
+
+<script>
+  // Supabase public project configuration.
+  // Never put a service-role or secret key in this file.
+
+  const SUPABASE_URL =
+    "https://ueofynwyordllqusdllm.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_KEqf6aoo7TqTE3Ui23OlQ3_-xnmh7I6";
+
+  const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  let currentUser = null;
+  let services = [];
+
+  function showMessage(id, message) {
+    const element = document.getElementById(id);
+    element.textContent = message;
+    element.classList.remove("hidden");
+  }
+
+  function clearMessage(id) {
+    const element = document.getElementById(id);
+    element.textContent = "";
+    element.classList.add("hidden");
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, function(char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char];
+    });
+  }
+
+  async function signUp() {
+    clearMessage("authMessage");
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!email || password.length < 8) {
+      showMessage(
+        "authMessage",
+        "Enter a valid email and a password with at least 8 characters."
+      );
+      return;
+    }
+
+    const { data, error } = await db.auth.signUp({
+      email,
+      password
+    });
+
+    if (error) {
+      showMessage("authMessage", error.message);
+      return;
+    }
+
+    if (data.session) {
+      await refreshSession();
+    } else {
+      showMessage(
+        "authMessage",
+        "Account request created. Check your email to confirm your account, then sign in."
+      );
+    }
+  }
+
+  async function signIn() {
+    clearMessage("authMessage");
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    const { error } = await db.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      showMessage("authMessage", error.message);
+      return;
+    }
+
+    await refreshSession();
+  }
+
+  async function signOut() {
+    await db.auth.signOut();
+    currentUser = null;
+
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("authCard").classList.remove("hidden");
+  }
+
+  async function refreshSession() {
+    const { data, error } = await db.auth.getUser();
+
+    if (error || !data.user) {
+      currentUser = null;
+      document.getElementById("dashboard").classList.add("hidden");
+      document.getElementById("authCard").classList.remove("hidden");
+      return;
+    }
+
+    currentUser = data.user;
+
+    document.getElementById("userEmail").textContent =
+      currentUser.email || "";
+
+    document.getElementById("authCard").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+
+    await loadServices();
+    await loadOrders();
+    await loadPayments();
+  }
+
+  async function loadServices() {
+    const list = document.getElementById("servicesList");
+    const select = document.getElementById("serviceSelect");
+
+    list.textContent = "Loading services...";
+    select.replaceChildren(new Option("Loading services...", ""));
+
+    const { data, error } = await db
+      .from("services")
+      .select("id,name,description,price")
+      .eq("active", true)
+      .order("name");
+
+    if (error) {
+      list.textContent = "Could not load services: " + error.message;
+      select.replaceChildren(new Option("Services unavailable", ""));
+      return;
+    }
+
+    services = data || [];
+    list.replaceChildren();
+    select.replaceChildren(new Option("Choose a service", ""));
+
+    if (services.length === 0) {
+      list.textContent =
+        "No services are available yet. The panel owner must add services.";
+      return;
+    }
+
+    services.forEach(service => {
+      const item = document.createElement("div");
+      item.className = "service";
+
+      const title = document.createElement("h3");
+      title.textContent = service.name;
+
+      const description = document.createElement("p");
+      description.className = "muted";
+      description.textContent = service.description || "";
+
+      const price = document.createElement("p");
+      price.className = "price";
+      price.textContent =
+        "₹" + Number(service.price).toFixed(2) + " per 1,000 units";
+
+      item.append(title, description, price);
+      list.appendChild(item);
+
+      const option = new Option(
+        service.name + " — ₹" + Number(service.price).toFixed(2) +
+        " / 1,000",
+        service.id
+      );
+
+      select.add(option);
+    });
+
+    calculatePrice();
+  }
+
+  function calculatePrice() {
+    const serviceId = document.getElementById("serviceSelect").value;
+    const quantityInput = document.getElementById("quantity");
+    const quantity = Number(quantityInput.value);
+
+    const service = services.find(s => String(s.id) === String(serviceId));
+
+    let total = 0;
+
+    if (
+      service &&
+      Number.isSafeInteger(quantity) &&
+      quantity > 0 &&
+      Number.isFinite(Number(service.price))
+    ) {
+      total = Number(service.price) * quantity / 1000;
+    }
+
+    document.getElementById("estimatedPrice").textContent =
+      "Estimated total: ₹" + total.toFixed(2);
+  }
+
+  async function placeOrder() {
+    clearMessage("orderMessage");
+
+    if (!currentUser) {
+      showMessage("orderMessage", "Please sign in first.");
+      return;
+    }
+
+    const serviceId = document.getElementById("serviceSelect").value;
+    const targetUrl = document.getElementById("targetUrl").value.trim();
+    const quantity = Number(document.getElementById("quantity").value);
+
+    const service = services.find(s => String(s.id) === String(serviceId));
+
+    if (!service) {
+      showMessage("orderMessage", "Please select an available service.");
+      return;
+    }
+
+    if (
+      !targetUrl ||
+      !Number.isSafeInteger(quantity) ||
+      quantity < 1 ||
+      quantity > 1000000
+    ) {
+      showMessage("orderMessage", "Enter a valid URL and quantity.");
+      return;
+    }
+
+    try {
+      const parsedUrl = new URL(targetUrl);
+
+      if (!["https:", "http:"].includes(parsedUrl.protocol)) {
+        throw new Error("Invalid URL");
+      }
+    } catch {
+      showMessage("orderMessage", "Please enter a valid public URL.");
+      return;
+    }
+
+    // This is a display estimate only. A secure backend must validate
+    // the service, quantity, price and payment before fulfillment.
+    const amount = Math.round(
+      Number(service.price) * quantity / 1000 * 100
+    ) / 100;
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showMessage("orderMessage", "The calculated amount is invalid.");
+      return;
+    }
+
+    const { error } = await db.from("orders").insert({
+      user_id: currentUser.id,
+      service_id: service.id,
+      target_url: targetUrl,
+      quantity: quantity,
+      amount: amount,
+      status: "pending"
+    });
+
+    if (error) {
+      showMessage(
+        "orderMessage",
+        "Order could not be submitted: " + error.message
+      );
+      return;
+    }
+
+    showMessage(
+      "orderMessage",
+      "Order request submitted. It is pending review; no service has been delivered yet."
+    );
+
+    document.getElementById("targetUrl").value = "";
+    document.getElementById("quantity").value = "";
+
+    calculatePrice();
+    await loadOrders();
+  }
+
+  async function submitPayment() {
+    clearMessage("paymentMessage");
+
+    if (!currentUser) {
+      showMessage("paymentMessage", "Please sign in first.");
+      return;
+    }
+
+    const amount = Number(
+      document.getElementById("paymentAmount").value
+    );
+
+    const transactionRef =
+      document.getElementById("transactionRef").value.trim();
+
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 10000000) {
+      showMessage("paymentMessage", "Enter a valid payment amount.");
+      return;
+    }
+
+    if (
+      transactionRef.length < 4 ||
+      transactionRef.length > 120
+    ) {
+      showMessage(
+        "paymentMessage",
+        "Enter a valid transaction reference."
+      );
+      return;
+    }
+
+    const { error } = await db.from("payment_requests").insert({
+      user_id: currentUser.id,
+      amount: amount,
+      transaction_ref: transactionRef,
+      status: "pending"
+    });
+
+    if (error) {
+      showMessage(
+        "paymentMessage",
+        "Payment request could not be submitted: " + error.message
+      );
+      return;
+    }
+
+    showMessage(
+      "paymentMessage",
+      "Payment request submitted. It remains pending until the owner verifies the transaction."
+    );
+
+    document.getElementById("paymentAmount").value = "";
+    document.getElementById("transactionRef").value = "";
+
+    await loadPayments();
+  }
+
+  async function loadOrders() {
+    const list = document.getElementById("ordersList");
+
+    if (!currentUser) return;
+
+    list.textContent = "Loading orders...";
+
+    const { data, error } = await db
+      .from("orders")
+      .select("id,quantity,amount,status,created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error) {
+      list.textContent = "Could not load orders: " + error.message;
+      return;
+    }
+
+    list.replaceChildren();
+
+    if (!data || data.length === 0) {
+      list.textContent = "You have no orders yet.";
+      return;
+    }
+
+    data.forEach(order => {
+      const item = document.createElement("div");
+      item.className = "service";
+
+      const title = document.createElement("h3");
+      title.textContent = "Order #" + order.id;
+
+      const details = document.createElement("p");
+      details.className = "muted";
+      details.textContent =
+        "Quantity: " + order.quantity +
+        " · Amount: ₹" + Number(order.amount).toFixed(2);
+
+      const status = document.createElement("span");
+      status.className = "status";
+      status.textContent = order.status;
+
+      item.append(title, details, status);
+      list.appendChild(item);
+    });
+  }
+
+  async function loadPayments() {
+    const list = document.getElementById("paymentsList");
+
+    if (!currentUser) return;
+
+    list.textContent = "Loading payment requests...";
+
+    const { data, error } = await db
+      .from("payment_requests")
+      .select("id,amount,status,created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error) {
+      list.textContent =
+        "Could not load payment requests: " + error.message;
+      return;
+    }
+
+    list.replaceChildren();
+
+    if (!data || data.length === 0) {
+      list.textContent = "You have no payment requests yet.";
+      return;
+    }
+
+    data.forEach(payment => {
+      const item = document.createElement("div");
+      item.className = "service";
+
+      const title = document.createElement("h3");
+      title.textContent = "Payment #" + payment.id;
+
+      const amount = document.createElement("p");
+      amount.className = "muted";
+      amount.textContent =
+        "Amount: ₹" + Number(payment.amount).toFixed(2);
+
+      const status = document.createElement("span");
+      status.className = "status";
+      status.textContent = payment.status;
+
+      item.append(title, amount, status);
+      list.appendChild(item);
+    });
+  }
+
+  db.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      setTimeout(() => refreshSession(), 0);
+    } else if (event === "SIGNED_OUT") {
+      currentUser = null;
+      document.getElementById("dashboard").classList.add("hidden");
+      document.getElementById("authCard").classList.remove("hidden");
+    }
+  });
+
+  refreshSession();
+</script>
+
+</body>
+</html>
